@@ -28,7 +28,7 @@ int verbose = 0;
 int number = 0;
 char *srec_name = NULL;
 
-unsigned int get_long(unsigned long addr);
+unsigned int get_long(unsigned int addr);
 void put_long(unsigned int addr, unsigned int val);
 unsigned char *map(unsigned int addr);
 
@@ -199,7 +199,7 @@ unsigned char *map(unsigned int addr){
   return &ram[block][page][word];
 }
 
-unsigned int get_long(unsigned long addr){
+unsigned int get_long(unsigned int addr){
   unsigned int val = *map(addr) << 24;
   val |= *map(addr+1) << 16;
   val |= *map(addr+2) << 8;
@@ -500,8 +500,8 @@ int main(int argc, char *argv[]){
             port_write_data_o,
             port_write_enable_o,
             port_read_enable_o,
-            port_buserr_i,
             port_reset_i,
+            port_buserr_i,
             port_timer_irq_i,
             port_extern_irq_i,
             port_itlb_miss_i,

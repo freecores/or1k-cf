@@ -25,27 +25,27 @@ is
       local S SD RS is
         SD <- 2**(width 'lsbs' Shift)  (* Shift Distance *)
 	RS <- (In '>>' SD)             (* Common right shift *)
-        S <- 'msb' Shift '?' {Mux, Mode 
+        S <- 'msb' Shift 'then' {mux Mode 
 	                           [ (In '<<' SD) 
 				     RS  
 				     (In '>>+' SD)  
 				     (RS '|' (In '<<' (32 - SD)))
-				   ], $}
-                       ':' In
-        Out <- {Shifter, S ('lsbs' Shift) Mode, $}
+				   ] $}
+                       'else' In
+        Out <- {Shifter S ('lsbs' Shift) Mode $}
       end
     end
   end
   
-  {VectorPrint, '0' {StringToVector, "EX A is ",$} '++' {VectorToHex, A, $}}
-  {VectorPrint, '0' {StringToVector, "EX B is ",$} '++' {VectorToHex, B, $}}
-  {VectorPrint, '0' {StringToVector, "EX ALUctl is ",$} '++' {VectorToBin, ALUctl, $}}
-  {VectorPrint, '0' {StringToVector, "EX ALU is ",$} '++' {VectorToHex, ALU, $}}
-  {VectorPrint, '0' ({StringToVector, "Insn in EX is ",$} '++' {VectorToHex, IR, $})}
+  {display '0' ({vector_of_string "EX A is " $} '++' {hex_of_vector A $})}
+  {display '0' ({vector_of_string "EX B is " $} '++' {hex_of_vector B $})}
+  {display '0' ({vector_of_string "EX ALUctl is " $} '++' {bin_of_vector ALUctl $})}
+  {display '0' ({vector_of_string "EX ALU is " $} '++' {hex_of_vector ALU $})}
+  {display '0' ({vector_of_string "Insn in EX is " $} '++' {hex_of_vector IR $})}
 
   ShiftDist <- B'[4:0]
-  S <- {Shifter, A ShiftDist ALUctl'[1:0], $}
-  ALU <- {Mux, ALUctl ALUres, $}
+  S <- {Shifter A ShiftDist ALUctl'[1:0] $}
+  ALU <- {mux ALUctl ALUres $}
   ADD <- ('0' '++' A) '+' ('0' '++' B)
   ADDC <- ADD '+' (('0' '#' 32) '++' C)
   SUB <- ('0' '++' A) '-' ('0' '++' B)
@@ -73,19 +73,20 @@ is
   Vnew <- (ALUctl '==' '0011') '&' (A'[31] '==' B'[31]) '&' (A'[31] '!=' ADD'[31])
     '|' (ALUctl '==' '0100') '&' (A'[31] '==' B'[31]) '&' (A'[31] '!=' ADDC'[31])
     '|' (ALUctl '==' '0101') '&' (A'[31] '!=' B'[31]) '&' (A'[31] '!=' SUB'[31])
-    '|' '0' (* FIXME do multiply *)
+    '|' (ALUctl '==' '1001') '&' ((MUL'[63] '#' 32) '!=' MUL'[63:32])
+    '|' (ALUctl '==' '1010') '&' (MULU'[63:32] '!=' ('0' '#' 32))
 
   Vlatch <- (ALUctl '==' '0011')
         '|' (ALUctl'[3:1] '==' '010')
         '|' (ALUctl '==' '1010')
         '|' (ALUctl '==' '1001')
 
-  Cnew <- ALUctl '==' '0011' '?' ADD'[32]
-      ':' ALUctl '==' '0100' '?' ADDC'[32]
-      ':' ALUctl '==' '0101' '?' SUB'[32]
-      ':' ALUctl '==' '1001' '?' MUL'[63:32] '!=' '0x00000000'
-      ':' ALUctl '==' '1010' '?' MULU'[63:32] '!=' '0x00000000'
-      ':' '0'
+  Cnew <- ALUctl '==' '0011' 'then' ADD'[32]
+      'else' ALUctl '==' '0100' 'then' ADDC'[32]
+      'else' ALUctl '==' '0101' 'then' SUB'[32]
+      'else' ALUctl '==' '1001' 'then' MUL'[63:32] '!=' '0x00000000'
+      'else' ALUctl '==' '1010' 'then' MULU'[63:32] '!=' '0x00000000'
+      'else' '0'
 
   Clatch <- ALUctl '==' '0011'
         '|' ALUctl '==' '0100'

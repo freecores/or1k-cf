@@ -14,11 +14,11 @@ with
   Byte Half
 is
 
-{VectorPrint, '0' ({StringToVector, "Insn in WB is ",$} '++' {VectorToHex, IR, $})}
-  Half <- MA'[1] '==' '1' '?'  MD'[15:0]
-      ':'                      MD'[31:16]
+{display '0' ({vector_of_string "Insn in WB is " $} '++' {hex_of_vector IR $})}
+  Half <- MA'[1] '==' '1' 'then'  MD'[15:0]
+      'else'                      MD'[31:16]
 
-  Byte <- {Mux, MA'[1:0] [MD'[31:24] MD'[23:16] MD'[15:8] MD'[7:0]],$}
+  Byte <- {mux MA'[1:0] [MD'[31:24] MD'[23:16] MD'[15:8] MD'[7:0]] $}
 
   (* Control for writeback mux.  Must match decode
        "0000"   ALU output
@@ -31,8 +31,8 @@ is
        "0111"   Immediate data in high half
        "1000"   Data from SPR
   *)
-  {VectorPrint, '0' ({StringToVector, "Memory address is " ,$} '++' {VectorToHex, MA, $})}
-  WD <- {Mux, WriteSelect [ALU 
+  {display '0' ({vector_of_string "Memory address is " $} '++' {hex_of_vector MA $})}
+  WD <- {mux WriteSelect [ALU 
 			   MD
 			   MD
 			   (('0' '#' 24) '++' Byte)
@@ -41,6 +41,6 @@ is
 	                   ((Half'[15] '#' 16) '++' Half)
 			   (IR'[15:0] '++' ('0' '#' 16))
 			   SPR
-			   ], $}
+			   ] $}
 end
 

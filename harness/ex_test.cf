@@ -11,10 +11,10 @@ environment "/usr/local/Confluence/lib/Logic.cf"
 
 EX <- import "ex.cf"
 
-{EX.T, {VectorInput,  "S1"      1 32, $}
-       {VectorInput,  "S2"      2 32, $}
-       {VectorInput,  "IM"      3 32, $}
-       {VectorInput,  "ALUctl"  4  5, $},
-       {VectorOutput, "ALU"     5 $}
-       {VectorOutput, "MemAddr" 6 $}}
+{EX.T, {input  "S1"      1 32 $}
+       {input  "S2"      2 32 $}
+       {input  "IM"      3 32 $}
+       {input  "ALUctl"  4  5 $},
+       {output "ALU"     5 $}
+       {output "MemAddr" 6 $}}
 

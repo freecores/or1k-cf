@@ -6,15 +6,15 @@
 *)
 
 -T
-
+is
 component T
   +WritePort +WriteAddr +WriteEnable +ReadAddr1 +ReadAddr2
   -ReadPort1 -ReadPort2
 with
   Mkregs WriteEnables Registers RegWidth
 is
-  if width WriteAddr != width ReadAddr1 {Error, "Register address widths differ"} end
-  if width WriteAddr != width ReadAddr2 {Error, "Register address widths differ"} end
+  if width WriteAddr != width ReadAddr1 {error "Register address widths differ"} end
+  if width WriteAddr != width ReadAddr2 {error "Register address widths differ"} end
   RegWidth <- width WritePort
 
   component Mkregs +WE -Regs is
@@ -23,21 +23,21 @@ is
     else
       local R Write is
         Write <- 'lsb' WE
-        R <- {VectorReg, RegWidth WritePort}
-        {Enable, Write R}
-        Regs <- R.DataOut :: {Mkregs, ('msbs' WE), $}
+        R <- {reg RegWidth WritePort}
+        {enable Write R}
+        Regs <- R.out :: {Mkregs ('msbs' WE) $}
       end
     end
   end
 
-  WriteEnables <- {Decoder, WriteEnable WriteAddr, $}
-  Registers <- {Mkregs, WriteEnables, $}
-  ReadPort1 <- WriteAddr '==' ReadAddr1 '&' WriteEnable '?' WritePort ':' {Mux, ReadAddr1 Registers, $}
-  ReadPort2 <- WriteAddr '==' ReadAddr2 '&' WriteEnable '?' WritePort ':' {Mux, ReadAddr2 Registers, $}
+  WriteEnables <- {decoder WriteEnable WriteAddr $}
+  Registers <- {Mkregs WriteEnables $}
+  ReadPort1 <- ((WriteAddr '==' ReadAddr1) '&' WriteEnable) 'then' WritePort 'else' {mux ReadAddr1 Registers $}
+  ReadPort2 <- ((WriteAddr '==' ReadAddr2) '&' WriteEnable) 'then' WritePort 'else' {mux ReadAddr2 Registers $}
 
-{VectorPrint, '1'({StringToVector, "Reg read addr1 is ",$} '++' {VectorToBin, ReadAddr1, $} '++' {StringToVector, ", data1 is ",$} '++' {VectorToHex, ReadPort1, $})}
-{VectorPrint, '1'({StringToVector, "Reg read addr2 is ",$} '++' {VectorToBin, ReadAddr2, $} '++' {StringToVector, ", data2 is ",$} '++' {VectorToHex, ReadPort2, $})}
-{VectorPrint, WriteEnable ({StringToVector, "Reg write addr is ",$} '++' {VectorToBin, WriteAddr, $} '++' {StringToVector, ", data is ",$} '++' {VectorToHex, WritePort, $})}
+{display '1' ({vector_of_string "Reg read addr1 is " $} '++' {bin_of_vector ReadAddr1 $} '++' {vector_of_string ", data1 is " $} '++' {hex_of_vector ReadPort1 $})}
+{display '1' ({vector_of_string "Reg read addr2 is " $} '++' {bin_of_vector ReadAddr2 $} '++' {vector_of_string ", data2 is " $} '++' {hex_of_vector ReadPort2 $})}
+{display WriteEnable ({vector_of_string "Reg write addr is " $} '++' {bin_of_vector WriteAddr $} '++' {vector_of_string ", data is " $} '++' {hex_of_vector WritePort $})}
 
 end
 
