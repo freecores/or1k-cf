@@ -1,0 +1,56 @@
+(*
+     Memory access unit
+
+     Copyright 2004 Ken Rose
+     All rights reserved
+*)
+
+-T
+
+is
+
+component T
+  +MemData +WE +MemAddr
+  -Addr -Data -WriteEnable
+with
+  Byte Half ByteEnable HalfEnable
+is
+  (* Put the byte to be written in the right place in the word *)
+  Byte <- {Mux, MemAddr'[1:0] [
+                           (MemData'[7:0] '++' {Zero, 24, $})
+			   ({Zero,  8, $} '++' MemData'[7:0] '++' {Zero, 16, $})
+			   ({Zero, 16, $} '++' MemData'[7:0] '++' {Zero, 8, $})
+			   ({Zero, 24, $} '++' MemData'[7:0])
+			  ], $}
+  ByteEnable <- {Mux, MemAddr'[1:0] [
+                                 '1000'
+				 '0100'
+				 '0010'
+				 '0001'
+				], $}
+
+  (* Put the halfword to be written in the right place in the word *)
+  Half <- {Mux, MemAddr'[1] [
+                           (MemData'[15:0] '++' {Zero, 16, $})
+			   ({Zero, 16, $} '++' MemData'[15:0])
+			  ], $}
+  HalfEnable <- {Mux, MemAddr'[1] [
+                                 '1100'
+				 '0011'
+				], $}
+
+  Addr <- MemAddr
+  Data <- {Mux, WE [
+                    MemData    (* No write - doesn't matter *)
+	            MemData    (* Word write *)
+	            Byte       (* Byte write *)
+	            Half       (* Halfword write *)
+	           ],$}
+
+  WriteEnable <- {Mux, WE [
+                           '0000'     (* No write *)
+			   '1111'     (* Full word write *)
+                           ByteEnable (* Byte write *)
+                           HalfEnable (* Half write *)
+			  ], $}
+end

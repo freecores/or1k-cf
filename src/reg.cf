@@ -1,0 +1,43 @@
+(*
+     Single write port, dual read port register file
+
+     Copyright 2004 Ken Rose
+     All rights reserved
+*)
+
+-T
+
+component T
+  +WritePort +WriteAddr +WriteEnable +ReadAddr1 +ReadAddr2
+  -ReadPort1 -ReadPort2
+with
+  Mkregs WriteEnables Registers RegWidth
+is
+  if width WriteAddr != width ReadAddr1 {Error, "Register address widths differ"} end
+  if width WriteAddr != width ReadAddr2 {Error, "Register address widths differ"} end
+  RegWidth <- width WritePort
+
+  component Mkregs +WE -Regs is
+    if width WE == 0
+       Regs <- []
+    else
+      local R Write is
+        Write <- 'lsb' WE
+        R <- {VectorReg, RegWidth WritePort}
+        {Enable, Write R}
+        Regs <- R.DataOut :: {Mkregs, ('msbs' WE), $}
+      end
+    end
+  end
+
+  WriteEnables <- {Decoder, WriteEnable WriteAddr, $}
+  Registers <- {Mkregs, WriteEnables, $}
+  ReadPort1 <- WriteAddr '==' ReadAddr1 '&' WriteEnable '?' WritePort ':' {Mux, ReadAddr1 Registers, $}
+  ReadPort2 <- WriteAddr '==' ReadAddr2 '&' WriteEnable '?' WritePort ':' {Mux, ReadAddr2 Registers, $}
+
+{VectorPrint, '1'({StringToVector, "Reg read addr1 is ",$} '++' {VectorToBin, ReadAddr1, $} '++' {StringToVector, ", data1 is ",$} '++' {VectorToHex, ReadPort1, $})}
+{VectorPrint, '1'({StringToVector, "Reg read addr2 is ",$} '++' {VectorToBin, ReadAddr2, $} '++' {StringToVector, ", data2 is ",$} '++' {VectorToHex, ReadPort2, $})}
+{VectorPrint, WriteEnable ({StringToVector, "Reg write addr is ",$} '++' {VectorToBin, WriteAddr, $} '++' {StringToVector, ", data is ",$} '++' {VectorToHex, WritePort, $})}
+
+end
+

@@ -1,0 +1,50 @@
+(*
+     Memory access unit test harness
+
+     Copyright 2004 Ken Rose
+     All rights reserved
+*)
+
+
+(*environment "/usr/local/Confluence/lib/Logic.cf"*)
+
+with
+Core Core_res Msg (*:Imem :Dmem *)
+is
+
+Core <- import "../src/pipe.cf"
+
+Core_res <- {Core.T}
+{Reset, {VectorInput, "reset"   8 1, $} Core_res}
+
+(*
+{VectorRamWbr, 32 '0' '0x0000' Core_res.Iaddr'[17:2] '0x00000000', Core_res.IMem}
+{VectorRamWbr, 32 Core_res.WriteEnable Core_res.Daddr'[15:0] Core_res.Daddr'[15:0] Core_res.WriteData, Core_res.DMem}
+*)
+
+
+
+Core_res.IMem <- {VectorInput, "imem"   1 32, $}
+Core_res.DMem <- {VectorInput, "dmem"   2 32, $}
+Core_res.Iaddr -> {VectorOutput, "iaddr"        3 $} 
+Core_res.Daddr -> {VectorOutput, "daddr"        4 $}
+Core_res.WriteData -> {VectorOutput, "write_data"   5 $}
+Core_res.WriteEnable -> {VectorOutput, "write_enable" 6 $}
+Core_res.ReadEnable -> {VectorOutput, "read_enable" 7 $}
+Core_res.BusError <- {VectorInput, "buserr"   8 1, $}
+Core_res.TimerIRQ <- {VectorInput, "timer_irq"   9 1, $}
+Core_res.ExternIRQ <- {VectorInput, "extern_irq"   10 1, $}
+Core_res.ITLBmiss <- {VectorInput, "itlb_miss"   11 1, $}
+Core_res.DTLBmiss <- {VectorInput, "dtlb_miss"   12 1, $}
+
+
+Msg <- "OpenRisc 1200"\
+       "Copyright 2003 Ken Rose"\
+       "All rights reserved"
+
+{Set, "FileName" "Cpu"}
+{Set, "BuildName" "Cpu"}
+{Set, "Header" Msg}
+{Set, "GenVerilog" true}
+{Set, "GenC" true}
+
